@@ -1,16 +1,25 @@
 <body>
 	<h1>BART Model for the Rheological Property Prediction from LMWGs</h1>
 	<p>This repository contains a machine learning model built using PyMC3, RDKit, AzViz, Matplotlib, Numpy, Pandas, Seaborn, and Scikit-Learn. The model uses chemical structure information to predict a certain property or outcome.</p>
+	<h2>Requirements</h2>
+	<ul>
+		<li>pymc3</li>
+		<li>arviz</li>
+		<li>rdkit</li>
+		<li>sklearn</li>
+		<li>matplotlib</li>
+		<li>seaborn</li>		
+	</ul>
 	<h2>Installation</h2>
 	<ol>
 		<li>Clone this repository: <code>git clone https://github.com/cmwoodley/BART_LMWG_model.git</code></li>
-		<li>Install the required packages: <code>conda create -n BART3 python=3.8 pymc3==3.11.5 arviz rdkit matplotlib numpy=1.20 numba=0.56 pandas dill==0.3.5.1 seaborn scikit-learn ipykernel -c conda-forge</code></li>
+		<li>Create conda environment and install the required packages: <code>conda create -n BART_LMWG python=3.8 pymc3==3.11.5 arviz rdkit matplotlib numpy=1.20 numba=0.56 pandas dill==0.3.5.1 seaborn scikit-learn ipykernel -c conda-forge</code></li>
 	</ol>
 	<h2>Usage</h2>
 	<ol>
 		<li>To build the models locally, run the training script provided in scripts/train.py: </li>
 	</ol>
-	<pre><code> >> python train.py
+	<pre><code> python train.py
 </code></pre>
 	<ol start="2">
 		<li>Serialised models are saved in models. Summary of predictions and scoring metrics are saved the reports folder. </li>
