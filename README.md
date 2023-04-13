@@ -1,6 +1,7 @@
 <body>
 	<h1>BART Model for the Rheological Property Prediction from LMWGs</h1>
-	<p>This repository contains a machine learning model built using PyMC3, RDKit, AzViz, Matplotlib, Numpy, Pandas, Seaborn, and Scikit-Learn. The model uses chemical structure information to predict a certain property or outcome.</p>
+	<p>This repository contains the dataset and scripts used to train BART models for the prediction of low molecular weight gelator rheological properties. The notebooks folder contains an example notebook for the prediction of rheological properties from smiles strings.</p>
+	<p>For ease of use, we also provide a Google Colab implementation of our code to predict rheological properties in a web browser.</p> 
 	<h2>Requirements</h2>
 	<ul>
 		<li>pymc3</li>
