@@ -1,7 +1,7 @@
 <body>
 	<h1>BART Model for the Rheological Property Prediction from LMWGs</h1>
 	<p>This repository contains the dataset and scripts used to train BART models for the prediction of low molecular weight gelator rheological properties. The notebooks folder contains an example notebook for the prediction of rheological properties from smiles strings.</p>
-	<p>For ease of use, we also provide a Google Colab implementation of our code to predict rheological properties in a web browser.</p> 
+	<p>For ease of use, we also provide a <a href="https://colab.research.google.com/github/cmwoodley/BART_LMWG_model/blob/master/notebooks/BART_LMWG.ipynb">Google Colab implementation</a> of our code to predict rheological properties in a web browser.</p> 
 	<h2>Requirements</h2>
 	<ul>
 		<li>pymc3</li>
