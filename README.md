@@ -13,6 +13,9 @@ For ease of use, we also provide a [Google Colab implementation](https://colab.r
 - seaborn
 
 ## Installation
+
+Installation should take approximately 10 minutes on a normal PC.
+
 1. Clone this repository:
 ```
 git clone https://github.com/cmwoodley/BART_LMWG_model.git
@@ -23,10 +26,14 @@ conda create -n BART_LMWG python=3.8 pymc3==3.11.5 arviz rdkit matplotlib numpy=
 ```
 
 ## Usage
+
 To build these models locally, run the training script provided in scripts/train.py:
 ```
 python train.py
 ```
+
+Building models with train.py should take less than 10 minutes on a normal PC.
+
 Serialised models are saved in ./models. Summary of predictions and scoring metrics are saved in the reports folder.
 
 An example notebook (notebooks/notebook1.ipynb) is provided with examples of predictions on a simgle LMWG and batches of LMWG.
