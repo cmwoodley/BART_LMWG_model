@@ -14,7 +14,7 @@ For ease of use, we also provide a [Google Colab implementation](https://colab.r
 
 ## Installation
 
-Installation should take approximately 10 minutes on a normal PC.
+Installation should take approximately 10 minutes on a normal PC. No non-standard hardware is required.
 
 1. Clone this repository:
 ```
@@ -32,7 +32,7 @@ To build these models locally, run the training script provided in scripts/train
 python train.py
 ```
 
-Building models with train.py should take less than 10 minutes on a normal PC.
+Building models with train.py should take less than 10 minutes on a normal PC. Running train.py generates the quantitative results described in the paper.
 
 Serialised models are saved in ./models. Summary of predictions and scoring metrics are saved in the reports folder.
 
