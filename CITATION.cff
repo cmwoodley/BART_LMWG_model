@@ -1,0 +1,8 @@
+cff-version: 1.1.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Christopher
+    given-names: Woodley
+title: BART_LMWG_model
+version: v1.0.1
+date-released: 2023-06-20
