@@ -21,8 +21,14 @@ Installation should take approximately 10 minutes on a normal PC. No non-standar
 git clone https://github.com/cmwoodley/BART_LMWG_model.git
 ```
 2. Create conda environment and install the required packages:
+
+Conda installation on Windows:
 ```
 conda create -n BART_LMWG python=3.8 pymc3==3.11.5 arviz rdkit matplotlib numpy=1.20 numba=0.56 pandas dill==0.3.5.1 seaborn scikit-learn ipykernel -c conda-forge
+```
+For installation on Linux (tested on WSL2 in Windows11)
+```
+conda env create -f environment.yml
 ```
 
 ## Usage
