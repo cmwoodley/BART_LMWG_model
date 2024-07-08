@@ -33,7 +33,6 @@ def get_ci_error(model, x, y, pred, error):
 data = pd.read_csv("../data/raw/data.csv")
 train = np.where(data.label == "train")[0]
 test = np.where(data.label == "test")[0]
-val = np.where(data.label == "val")[0]
 
 smiles_full = data.SMILES
 mols_full = [Chem.MolFromSmiles(x) for x in smiles_full]
@@ -42,15 +41,13 @@ gdbl = data.gdbl
 
 gtrain_error = data.err_g[train]
 gtest_error = data.err_g[test] 
-gval_error = data.err_g[val]
 gdbltrain_error = data.err_gdbl[train]
 gdbltest_error = data.err_gdbl[test] 
-gdblval_error = data.err_gdbl[val]
 
 ## Get Descriptors
 
 df = pd.DataFrame()
-df["num_rings"] = [Chem.rdMolDescriptors.CalcNumRings(x) for x in mols_full]
+df["nRings"] = [Chem.rdMolDescriptors.CalcNumRings(x) for x in mols_full]
 
 fcfp = []
 for mol in mols_full:
@@ -66,7 +63,7 @@ for mol in mols_full:
     Chem.DataStructs.ConvertToNumpyArray(fp,ar)
     ecfp.append(ar)
 ecfp = pd.DataFrame(np.stack(ecfp), columns=["ECFP_"+str(i) for i in range(2048)])
-df = pd.concat([df,fcfp,ecfp],axis=1)
+df = pd.concat([ecfp,fcfp,df],axis=1)
 
 
 for col in df.columns:
@@ -76,32 +73,25 @@ for col in df.columns:
 
 xtrain = df.iloc[train]
 xtest = df.iloc[test].reset_index(drop=True)
-xval = df.iloc[val].reset_index(drop=True)
 
 gtrain = g.iloc[train]
 gtest = g.iloc[test]
-gval = g.iloc[val]
 
 gdbltrain = gdbl.iloc[train]
 gdbltest = gdbl.iloc[test]
-gdblval = gdbl.iloc[val]
-
 
 
 ## Remove correlated and zero variance descriptors
 
-xtrain = variance_threshold_selector(xtrain)
+scaler = StandardScaler()
+VT = VarianceThreshold(threshold=0.0).fit(xtrain)
+xtrain = pd.DataFrame(VT.transform(xtrain), columns=VT.get_feature_names_out())
 corr_matrix = xtrain.corr().abs()
 upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
-to_drop = [column for column in upper.columns if any(upper[column] > 0.9)]+["FCFP_0"] ## Added FCFP_0 due to being set in all molecules
-xtrain = xtrain.drop(xtrain[to_drop], axis=1)
-xtest = xtest[xtrain.columns]
-xval = xval[xtrain.columns]
-
-scaler = StandardScaler()
-xtrain = pd.DataFrame(scaler.fit_transform(xtrain), columns = xtrain.columns)
-xtest = pd.DataFrame(scaler.transform(xtest), columns = xtrain.columns)
-xval = pd.DataFrame(scaler.transform(xval), columns = xtrain.columns)
+to_drop = [column for column in upper.columns if any(upper[column] > 0.9)]
+xtrain = xtrain[[x for x in xtrain.columns if x not in to_drop]]
+xtrain = pd.DataFrame(scaler.fit_transform(xtrain), columns=xtrain.columns)
+xtest = pd.DataFrame(scaler.transform(xtest[xtrain.columns]), columns=xtrain.columns)
 
 with open("../models/scaler.pkl", "wb") as f:
     dill.dump(scaler, f)
@@ -110,36 +100,31 @@ with open("../models/scaler.pkl", "wb") as f:
 
 xtrain.to_csv("../data/split/xtrain.csv", index=False)
 xtest.to_csv("../data/split/xtest.csv", index=False)
-xval.to_csv("../data/split/xval.csv", index=False)
 
 gtrain.to_csv("../data/split/gtrain.csv", index=False)
 gtest.to_csv("../data/split/gtest.csv", index=False)
-gval.to_csv("../data/split/gval.csv", index=False)
 
 gdbltrain.to_csv("../data/split/gdbltrain.csv", index=False)
 gdbltest.to_csv("../data/split/gdbltest.csv", index=False)
-gdblval.to_csv("../data/split/gdblval.csv", index=False)
 
 ## BART requires y data as np array
 
 gtrain = np.ravel(gtrain)
 gtest = np.ravel(gtest)
-gval = np.ravel(gval)
 
 gdbltrain = np.ravel(gdbltrain)
 gdbltest = np.ravel(gdbltest)
-gdblval = np.ravel(gdblval)
 
 ## Build and save models
 
 models = []
 traces = []
-for y,m,alpha in [(gtrain,10,0.9), (gdbltrain,25,0.8)]:
+for y,m,alpha in [(gtrain,25,0.2), (gdbltrain,25,0.4)]:
     with pm.Model() as model:
         σ = pm.HalfNormal('σ', 1)
         μ = pm.BART('μ', xtrain, np.array(y), m=m, alpha=alpha)
         y = pm.Normal('y', μ, σ, observed=np.array(y))
-        trace = pm.sample(2000, cores=1, tune=1000, return_inferencedata=False, random_seed = 42)
+        trace = pm.sample(1000, cores=1, tune=1000, return_inferencedata=False, random_seed = 42)
 
     models.append(model)
     traces.append(trace)
@@ -167,33 +152,27 @@ gtrain_pred = model_g.µ.distribution.predict(np.array(xtrain)).mean(axis=0)
 gdbltrain_pred = model_gdbl.µ.distribution.predict(np.array(xtrain)).mean(axis=0)
 gtest_pred = model_g.µ.distribution.predict(np.array(xtest)).mean(axis=0)
 gdbltest_pred = model_gdbl.µ.distribution.predict(np.array(xtest)).mean(axis=0)
-gval_pred = model_g.µ.distribution.predict(np.array(xval)).mean(axis=0)
-gdblval_pred = model_gdbl.µ.distribution.predict(np.array(xval)).mean(axis=0)
 
 
 gtrain_pred_res = np.abs(gtrain_pred - gtrain)
 gdbltrain_pred_res = np.abs(gdbltrain_pred - gdbltrain)
 gtest_pred_res = np.abs(gtest_pred - gtest)
 gdbltest_pred_res = np.abs(gdbltest_pred - gdbltest)
-gval_pred_res = np.abs(gval_pred - gval)
-gdblval_pred_res = np.abs(gdblval_pred - gdblval)
 
 
 gtrain_dist, gtrain_ci, gtrain_ci_errors, gtrain_exp_errors = get_ci_error(model_g, xtrain, gtrain, gtrain_pred, gtrain_error)
 gtest_dist, gtest_ci, gtest_ci_errors, gtest_exp_errors = get_ci_error(model_g, xtest, gtest, gtest_pred, gtest_error)
-gval_dist, gval_ci, gval_ci_errors, gval_exp_errors = get_ci_error(model_g, xval, gval, gval_pred, gval_error)
 gdbltrain_dist, gdbltrain_ci, gdbltrain_ci_errors, gdbltrain_exp_errors = get_ci_error(model_gdbl, xtrain, gdbltrain, gdbltrain_pred, gdbltrain_error)
 gdbltest_dist, gdbltest_ci, gdbltest_ci_errors, gdbltest_exp_errors = get_ci_error(model_gdbl, xtest, gdbltest, gdbltest_pred, gdbltest_error)
-gdblval_dist, gdblval_ci, gdblval_ci_errors, gdblval_exp_errors = get_ci_error(model_gdbl, xval, gdblval, gdblval_pred, gdblval_error)
 
-ci_errors_fullg = np.concatenate([gtrain_ci_errors, gtest_ci_errors, gval_ci_errors])
+ci_errors_fullg = np.concatenate([gtrain_ci_errors, gtest_ci_errors])
 ci_errors_1g = []
 ci_errors_2g = []
 for i in range(len(ci_errors_fullg)):
     ci_errors_1g.append(ci_errors_fullg[i][0])
     ci_errors_2g.append(ci_errors_fullg[i][1])
     
-ci_errors_fullgdbl = np.concatenate([gdbltrain_ci_errors, gdbltest_ci_errors, gdblval_ci_errors])
+ci_errors_fullgdbl = np.concatenate([gdbltrain_ci_errors, gdbltest_ci_errors])
 ci_errors_1gdbl = []
 ci_errors_2gdbl = []
 for i in range(len(ci_errors_fullgdbl)):
@@ -205,29 +184,28 @@ ci_errors_2g = pd.Series(ci_errors_2g, name="ci2_g")
 ci_errors_1gdbl = pd.Series(ci_errors_1g, name="ci1_gdbl")
 ci_errors_2gdbl = pd.Series(ci_errors_2g, name="ci2_gdbl")
 
-all_errg = pd.Series(list(gtrain_exp_errors[0]) + list(gtest_exp_errors[0]) + list(gval_exp_errors[0]), name = "err_g")
-all_errgdbl = pd.Series(list(gdbltrain_exp_errors[0]) + list(gdbltest_exp_errors[0]) + list(gdblval_exp_errors[0]), name = "err_gdbl")
+all_errg = pd.Series(list(gtrain_exp_errors[0]) + list(gtest_exp_errors[0]) , name = "err_g")
+all_errgdbl = pd.Series(list(gdbltrain_exp_errors[0]) + list(gdbltest_exp_errors[0]) , name = "err_gdbl")
 
 train_results = pd.DataFrame([gtrain, gtrain_pred, gtrain_pred_res, gdbltrain, gdbltrain_pred, gdbltrain_pred_res], index=["g", "g_pred", "g_pred_res", "gdbl", "gdbl_pred", "gdbl_pred_res"]).T
 train_results["label"] = ["train" for x in range(len(train_results))]
 test_results = pd.DataFrame([gtest, gtest_pred, gtest_pred_res, gdbltest, gdbltest_pred, gdbltest_pred_res], index=["g", "g_pred", "g_pred_res", "gdbl", "gdbl_pred", "gdbl_pred_res"]).T
 test_results["label"] = ["test" for x in range(len(test_results))]
-val_results = pd.DataFrame([gval, gval_pred, gval_pred_res, gdblval, gdblval_pred, gdblval_pred_res], index=["g", "g_pred", "g_pred_res", "gdbl", "gdbl_pred", "gdbl_pred_res"]).T
-val_results["label"] = ["val" for x in range(len(val_results))]
 
 
-results = pd.concat([train_results, test_results, val_results], axis=0).reset_index(drop=True)
+
+results = pd.concat([train_results, test_results], axis=0).reset_index(drop=True)
 
 results = pd.concat([results, all_errg, ci_errors_1g, ci_errors_2g, all_errgdbl, ci_errors_1gdbl, ci_errors_2gdbl, smiles_full],axis=1)
 results.to_csv("../reports/predictions.csv", index=False)
 
 prediction_summary = pd.DataFrame()
-for ind in [train, test, val]:
+for ind in [train, test]:
     gr2 = r2_score(results.g[ind], results.g_pred[ind])
     grmse = np.sqrt(mean_squared_error(results.g[ind], results.g_pred[ind]))
     gdblr2 = r2_score(results.gdbl[ind], results.gdbl_pred[ind])
     gdblrmse = np.sqrt(mean_squared_error(results.gdbl[ind], results.gdbl_pred[ind]))
     pred_rep = pd.DataFrame([gr2, grmse, gdblr2, gdblrmse],index=["gr2", "grmse", "gdblr2", "gdblrmse"]).T
     prediction_summary = pd.concat([prediction_summary, pred_rep], axis=0).reset_index(drop=True)
-prediction_summary.rename({0:"train",1:"test",2:"val"}, axis=0, inplace=True)
+prediction_summary.rename({0:"train",1:"test"}, axis=0, inplace=True)
 prediction_summary.to_csv("../reports/prediction_summary.csv", index=False)
