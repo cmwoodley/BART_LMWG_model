@@ -208,4 +208,4 @@ for ind in [train, test]:
     pred_rep = pd.DataFrame([gr2, grmse, gdblr2, gdblrmse],index=["gr2", "grmse", "gdblr2", "gdblrmse"]).T
     prediction_summary = pd.concat([prediction_summary, pred_rep], axis=0).reset_index(drop=True)
 prediction_summary.rename({0:"train",1:"test"}, axis=0, inplace=True)
-prediction_summary.to_csv("../reports/prediction_summary.csv", index=False)
+prediction_summary.to_csv("../reports/prediction_summary.csv", index=True)
