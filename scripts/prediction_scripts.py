@@ -28,22 +28,24 @@ with open("../models/gdbl.pkl","rb") as f:
     model_gdbl = dill.load(f)
 
 xtrain_columns = ['ECFP_1', 'ECFP_9', 'ECFP_25', 'ECFP_41', 'ECFP_45', 'ECFP_46',
-       'ECFP_59', 'ECFP_79', 'ECFP_94', 'ECFP_102', 'ECFP_106', 'ECFP_147',
-       'ECFP_173', 'ECFP_192', 'ECFP_197', 'ECFP_203', 'ECFP_221', 'ECFP_249',
-       'ECFP_265', 'ECFP_283', 'ECFP_294', 'ECFP_303', 'ECFP_310', 'ECFP_322',
-       'ECFP_366', 'ECFP_442', 'ECFP_486', 'ECFP_507', 'ECFP_533', 'ECFP_572',
-       'ECFP_573', 'ECFP_598', 'ECFP_628', 'ECFP_680', 'ECFP_684', 'ECFP_718',
-       'ECFP_726', 'ECFP_728', 'ECFP_736', 'ECFP_781', 'ECFP_802', 'ECFP_835',
-       'ECFP_841', 'ECFP_851', 'ECFP_875', 'ECFP_926', 'ECFP_989', 'ECFP_1015',
-       'ECFP_1019', 'ECFP_1039', 'ECFP_1057', 'ECFP_1064', 'ECFP_1087',
-       'ECFP_1088', 'ECFP_1104', 'ECFP_1110', 'ECFP_1112', 'ECFP_1118',
-       'ECFP_1167', 'ECFP_1187', 'ECFP_1329', 'ECFP_1343', 'ECFP_1357',
-       'ECFP_1385', 'ECFP_1410', 'ECFP_1460', 'ECFP_1517', 'ECFP_1530',
-       'ECFP_1575', 'ECFP_1624', 'ECFP_1665', 'ECFP_1691', 'ECFP_1776',
-       'ECFP_1829', 'ECFP_1844', 'ECFP_1855', 'ECFP_1906', 'ECFP_1933',
-       'ECFP_1935', 'ECFP_1977', 'ECFP_2001', 'FCFP_8', 'FCFP_224', 'FCFP_428',
-       'FCFP_792', 'FCFP_806', 'FCFP_1304', 'FCFP_1395', 'FCFP_1668',
-       'FCFP_1727', 'FCFP_1907', 'FCFP_1915', 'nRings']
+       'ECFP_59', 'ECFP_79', 'ECFP_94', 'ECFP_102', 'ECFP_106',
+       'ECFP_117', 'ECFP_147', 'ECFP_173', 'ECFP_192', 'ECFP_197',
+       'ECFP_203', 'ECFP_221', 'ECFP_249', 'ECFP_265', 'ECFP_283',
+       'ECFP_294', 'ECFP_303', 'ECFP_305', 'ECFP_310', 'ECFP_322',
+       'ECFP_366', 'ECFP_442', 'ECFP_486', 'ECFP_507', 'ECFP_572',
+       'ECFP_573', 'ECFP_598', 'ECFP_628', 'ECFP_680', 'ECFP_684',
+       'ECFP_718', 'ECFP_726', 'ECFP_728', 'ECFP_736', 'ECFP_781',
+       'ECFP_802', 'ECFP_835', 'ECFP_841', 'ECFP_851', 'ECFP_875',
+       'ECFP_926', 'ECFP_989', 'ECFP_1015', 'ECFP_1019', 'ECFP_1039',
+       'ECFP_1057', 'ECFP_1064', 'ECFP_1087', 'ECFP_1088', 'ECFP_1104',
+       'ECFP_1110', 'ECFP_1112', 'ECFP_1118', 'ECFP_1167', 'ECFP_1187',
+       'ECFP_1329', 'ECFP_1343', 'ECFP_1357', 'ECFP_1385', 'ECFP_1410',
+       'ECFP_1460', 'ECFP_1517', 'ECFP_1530', 'ECFP_1575', 'ECFP_1624',
+       'ECFP_1665', 'ECFP_1691', 'ECFP_1776', 'ECFP_1829', 'ECFP_1844',
+       'ECFP_1855', 'ECFP_1906', 'ECFP_1933', 'ECFP_1935', 'ECFP_1977',
+       'ECFP_2001', 'FCFP_8', 'FCFP_224', 'FCFP_428', 'FCFP_792',
+       'FCFP_806', 'FCFP_1304', 'FCFP_1395', 'FCFP_1668', 'FCFP_1727',
+       'FCFP_1907', 'FCFP_1915', 'nRings']
 
 def applicability(x, smiles):
     data = pd.read_csv("../data/raw/data.csv")
@@ -90,7 +92,6 @@ def applicability(x, smiles):
                 break
             elif x[i,j].round(6) < min(xtrain[:,j].round(6)):
                 inlier = False
-                print(2)
                 break
         if inlier == False:
             outliers.append(i)
